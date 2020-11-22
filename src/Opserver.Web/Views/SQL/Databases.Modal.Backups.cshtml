@@ -4,9 +4,11 @@
     var s = Model.Instance;
     var backups = s.GetBackupInfo(Model.Database);
 }
+
 @section top {
     <span class="pull-right small">@Poll.Now(backups)</span>
 }
+
 @if (backups.Data == null || !backups.Successful)
 {
     <div class="alert alert-warning">
@@ -14,9 +16,11 @@
         <p class="error-stack">@backups.ErrorMessage</p>
     </div>
 }
-else {
-    <table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive js-database-backups">
-        <thead>
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover text-nowrap table-super-condensed js-database-backups">
+            <thead>
             <tr>
                 <th>Type</th>
                 <th>Start</th>
@@ -25,21 +29,23 @@ else {
                 <th>Media</th>
                 <th>Location</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach (var b in backups.Data.OrderByDescending(b => b.FinishDate))
             {
                 <tr class="@(b.TypeDescription == "Full" ? "info" : null)">
                     <td>@b.TypeDescription</td>
                     <td>@(b.StartDate?.ToRelativeTimeSpanMini())</td>
                     <td>@(b.FinishDate?.ToRelativeTimeSpanMini())</td>
-                    <td>@(b.SizeBytes?.ToSize()) <span class="text-muted">(@(b.CompressedSizeBytes?.ToSize()))</span></td>
+                    <td>
+                        @(b.SizeBytes?.ToSize()) <span class="text-muted">(@(b.CompressedSizeBytes?.ToSize()))</span>
+                    </td>
                     <td>@(b.MediaDeviceType.HasValue ? b.MediaDeviceType.Value.AsString(EnumFormat.Description) : "")</td>
                     <td title="@(b.PhysicalDeviceName ?? b.LogicalDeviceName)">@((b.PhysicalDeviceName ?? b.LogicalDeviceName).TruncateWithEllipsis(75))</td>
                 </tr>
             }
-        </tbody>
-        <tfoot>
+            </tbody>
+            <tfoot>
             @if (!backups.Data.Any())
             {
                 <tr>
@@ -48,8 +54,9 @@ else {
                     </td>
                 </tr>
             }
-        </tfoot>
-    </table>
+            </tfoot>
+        </table>
+    </div>
     <script>
         $(function () {
             $('.js-database-backups').tablesorter({

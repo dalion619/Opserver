@@ -1,13 +1,14 @@
-﻿@using System.Collections.Specialized
-@using System.Net
-@using System.Text.RegularExpressions
+﻿@using System.Text.RegularExpressions
+@using System.Collections.Specialized
 @using StackExchange.Exceptional
+@using System.Net
 @model ExceptionsModel
 @{
     var error = Model.Exception;
     const string customDataErrorKey = "CustomDataFetchError";
     this.SetPageTitle("Error Info - " + error);
 }
+
 @section head {
     @if (error != null)
     {
@@ -22,49 +23,48 @@
         </script>
     }
 }
+
 @functions
 {
     private static readonly HashSet<string> HiddenHttpKeys = new HashSet<string>
-{
-    "ALL_HTTP",
-    "ALL_RAW",
-    "HTTP_CONTENT_LENGTH",
-    "HTTP_CONTENT_TYPE",
-    "HTTP_COOKIE",
-    "QUERY_STRING"
-};
+                                                             {
+                                                                 "ALL_HTTP",
+                                                                 "ALL_RAW",
+                                                                 "HTTP_CONTENT_LENGTH",
+                                                                 "HTTP_CONTENT_TYPE",
+                                                                 "HTTP_COOKIE",
+                                                                 "QUERY_STRING"
+                                                             };
 
     private static readonly HashSet<string> DefaultHttpKeys = new HashSet<string>
-{
-    "APPL_MD_PATH",
-    "APPL_PHYSICAL_PATH",
-    "GATEWAY_INTERFACE",
-    "HTTP_ACCEPT",
-    "HTTP_ACCEPT_CHARSET",
-    "HTTP_ACCEPT_ENCODING",
-    "HTTP_ACCEPT_LANGUAGE",
-    "HTTP_CONNECTION",
-    "HTTP_KEEP_ALIVE",
-    "HTTPS",
-    "INSTANCE_ID",
-    "INSTANCE_META_PATH",
-    "PATH_INFO",
-    "PATH_TRANSLATED",
-    "REMOTE_PORT",
-    "SCRIPT_NAME",
-    "SERVER_NAME",
-    "SERVER_PORT",
-    "SERVER_PORT_SECURE",
-    "SERVER_PROTOCOL",
-    "SERVER_SOFTWARE"
-};
+                                                              {
+                                                                  "APPL_MD_PATH",
+                                                                  "APPL_PHYSICAL_PATH",
+                                                                  "GATEWAY_INTERFACE",
+                                                                  "HTTP_ACCEPT",
+                                                                  "HTTP_ACCEPT_CHARSET",
+                                                                  "HTTP_ACCEPT_ENCODING",
+                                                                  "HTTP_ACCEPT_LANGUAGE",
+                                                                  "HTTP_CONNECTION",
+                                                                  "HTTP_KEEP_ALIVE",
+                                                                  "HTTPS",
+                                                                  "INSTANCE_ID",
+                                                                  "INSTANCE_META_PATH",
+                                                                  "PATH_INFO",
+                                                                  "PATH_TRANSLATED",
+                                                                  "REMOTE_PORT",
+                                                                  "SCRIPT_NAME",
+                                                                  "SERVER_NAME",
+                                                                  "SERVER_PORT",
+                                                                  "SERVER_PORT_SECURE",
+                                                                  "SERVER_PROTOCOL",
+                                                                  "SERVER_SOFTWARE"
+                                                              };
 
     private static readonly Regex _sanitizeUrl = new Regex(@"[^-a-z0-9+&@#/%?=~_|!:,.;\*\(\)\{\}]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    public static string SanitizeUrl(string url)
-    {
-        return url.IsNullOrEmpty() ? url : _sanitizeUrl.Replace(url, "");
-    }
-    
+
+    public static string SanitizeUrl(string url) => url.IsNullOrEmpty() ? url : _sanitizeUrl.Replace(url, "");
+
     string Linkify(string possibleLink)
     {
         if (possibleLink.IsNullOrEmpty())
@@ -97,15 +97,18 @@
         {
             return;
         }
-        // If this is a hidden row, buffer it up, since CSS has no clean mechanism for :visible:nth-row(odd) type styling behavior
+    // If this is a hidden row, buffer it up, since CSS has no clean mechanism for :visible:nth-row(odd) type styling behavior
         Func<string, bool> isHidden = k => DefaultHttpKeys.Contains(k);
         var allKeys = vars.AllKeys.Where(key => !HiddenHttpKeys.Contains(key) && vars[key].HasValue()).OrderBy(k => k);
 
         <div class="@className">
-            <h5><strong>@title</strong></h5>
+            <h5>
+                <strong>@title</strong>
+            </h5>
             <div class="side-scroll">
-                <table class="table table-striped table-hover table-super-condensed table-responsive">
-                    <tbody>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-super-condensed">
+                        <tbody>
                         @foreach (var k in allKeys.Where(k => !isHidden(k)))
                         {
                             <tr>
@@ -138,26 +141,26 @@
                                 var method = Model.Exception.HTTPMethod;
                                 if (method.HasValue())
                                 {
-                                <tr>
-                                    <td class="text-nowrap">Method</td>
-                                    <td>@method</td>
-                                </tr>
+                                    <tr>
+                                        <td class="text-nowrap">Method</td>
+                                        <td>@method</td>
+                                    </tr>
                                     var fullUrl = Model.Exception.GetFullUrl();
                                     if (fullUrl.HasValue())
                                     {
-                                    <tr>
-                                        <td class="text-nowrap">URL and Query</td>
-                                        <td>
-                                            @if (method == "GET")
-                                            {
-                                                Linkify(fullUrl);
-                                            }
-                                            else
-                                            {
-                                                @fullUrl.HtmlEncode()
-                                            }
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td class="text-nowrap">URL and Query</td>
+                                            <td>
+                                                @if (method == "GET")
+                                                {
+                                                    Linkify(fullUrl);
+                                                }
+                                                else
+                                                {
+                                                    @fullUrl.HtmlEncode()
+                                                }
+                                            </td>
+                                        </tr>
                                     }
                                 }
                             }
@@ -169,8 +172,9 @@
                                 <td>@Linkify(vars[k])</td>
                             </tr>
                         }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     }
@@ -210,12 +214,14 @@
     else
     {
         <h5 class="page-header">
-            <a href="@Url.Action(nameof(ExceptionsController.Exceptions), new { store = Model.Store.Name })">@Model.Store.Name Exceptions</a>
+            <a href="@Url.Action(nameof(ExceptionsController.Exceptions), new {store = Model.Store.Name})">@Model.Store.Name Exceptions</a>
             <span class="text-muted">/</span>
-            <a href="@Url.Action(nameof(ExceptionsController.Exceptions), new { store = Model.Store.Name, log = error.ApplicationName })">@error.ApplicationName</a>
+            <a href="@Url.Action(nameof(ExceptionsController.Exceptions), new {store = Model.Store.Name, log = error.ApplicationName})">@error.ApplicationName</a>
             <span class="text-muted">/</span>
             @error.Type
-            <span class="pull-right"><a href="@Url.Action(nameof(ExceptionsController.Exceptions), new { similar = error.GUID, log = error.ApplicationName, store = Model.Store?.Name })">View Similar</a></span>
+            <span class="pull-right">
+                <a href="@Url.Action(nameof(ExceptionsController.Exceptions), new {similar = error.GUID, log = error.ApplicationName, store = Model.Store?.Name})">View Similar</a>
+            </span>
         </h5>
         <p class="small text-danger js-error-message">@error.Message</p>
         <div class="error-info">
@@ -224,66 +230,75 @@
                 occurred <b title="@error.CreationDate.ToLongDateString() at @error.CreationDate.ToLongTimeString()">@error.CreationDate.ToRelativeTime()</b> (@error.CreationDate.ToZuluTime()) on @error.MachineName
                 @if (!error.DeletionDate.HasValue && Current.User.Is(ExceptionsRoles.Admin))
                 {
-                    <span class="text-muted pipe-delim js-exception-actions">(<a href="#" data-url="@Url.Action(nameof(ExceptionsController.Delete))" title="delete this error from the log"><i class="fa fa-times fa-fw text-danger" aria-hidden="true"></i>delete</a>
-                        @if (!error.IsProtected) {
+                    <span class="text-muted pipe-delim js-exception-actions">
+                        (<a href="#" data-url="@Url.Action(nameof(ExceptionsController.Delete))" title="delete this error from the log"><i class="fa fa-times fa-fw text-danger" aria-hidden="true"></i>delete</a>
+                        @if (!error.IsProtected)
+                        {
                             <span class="text-muted">|</span>
                             <a href="#" data-url="@Url.Action(nameof(ExceptionsController.Protect))" title="protect this error"><i class="fa fa-lock fa-fw text-warning" aria-hidden="true"></i>protect</a>
                         }
-                     )</span>
+                        )
+                    </span>
                 }
             </p>
-            @{ 
-            if (Module.Settings.Jira.Enabled && Current.User.Is(ExceptionsRoles.Admin))
-            {
-                // TODO: Jira Actions
-                //@Html.Action("JiraActions", new { appName = error.ApplicationName })
-            }
-            if (error.Commands != null)
-            {
-                foreach (var cmd in error.Commands)
+            @{
+                if (Module.Settings.Jira.Enabled && Current.User.Is(ExceptionsRoles.Admin))
                 {
-                    var lang = cmd.GetHighlightLanguage();
-                    <h4>Command: @cmd.Type</h4>
-                    <pre class="command"><code class="@(cmd.Type.Contains("SQL") ? "sql" : (lang.HasValue() ? lang : null))">@cmd.CommandString</code></pre>
-
-                    RenderKeyValueTable(cmd.Data);
+                    // TODO: Jira Actions
+                    //@Html.Action("JiraActions", new { appName = error.ApplicationName })
                 }
-            }
-            RenderVariableTable("Server Variables", "server-variables", error.ServerVariables, renderUrls: true);
-            if (error.CustomData?.Count > 0)
-            {
-                var errored = error.CustomData.ContainsKey(customDataErrorKey);
-                var cdKeys = error.CustomData.Keys.Where(k => k != customDataErrorKey).ToList();
-                <div class="custom-data">
-                    @if (errored)
+                if (error.Commands != null)
+                {
+                    foreach (var cmd in error.Commands)
                     {
-                        <h5 class="text-danger"><strong>Custom - Error while gathering custom data</strong></h5>
-                        <span>GetCustomData threw an exception:</span>
-                        <pre class="error-detail">@error.CustomData[customDataErrorKey]</pre>
+                        var lang = cmd.GetHighlightLanguage();
+                        <h4>Command: @cmd.Type</h4>
+                        <pre class="command"><code class="@(cmd.Type.Contains("SQL") ? "sql" : lang.HasValue() ? lang : null)">@cmd.CommandString</code></pre>
+
+                        RenderKeyValueTable(cmd.Data);
                     }
-                    else if (cdKeys.Any())
-                    {
-                        <h5><strong>Custom</strong></h5>
-                        <div class="side-scroll">
-                            <table class="table table-striped table-hover table-super-condensed table-responsive">
-                                <tbody>
-                                    @foreach (var cd in cdKeys)
-                                    {
-                                        <tr>
-                                            <td class="text-nowrap">@cd</td>
-                                            <td>@Linkify(error.CustomData[cd])</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
-            }
-            RenderVariableTable("Query Parameters", "querystring", error.QueryString);
-            RenderVariableTable("Form", "form", error.Form);
-            RenderVariableTable("Cookies", "cookies", error.Cookies);
-            RenderVariableTable("Request Headers", "headers", error.RequestHeaders);
+                }
+                RenderVariableTable("Server Variables", "server-variables", error.ServerVariables, true);
+                if (error.CustomData?.Count > 0)
+                {
+                    var errored = error.CustomData.ContainsKey(customDataErrorKey);
+                    var cdKeys = error.CustomData.Keys.Where(k => k != customDataErrorKey).ToList();
+                    <div class="custom-data">
+                        @if (errored)
+                        {
+                            <h5 class="text-danger">
+                                <strong>Custom - Error while gathering custom data</strong>
+                            </h5>
+                            <span>GetCustomData threw an exception:</span>
+                            <pre class="error-detail">@error.CustomData[customDataErrorKey]</pre>
+                        }
+                        else if (cdKeys.Any())
+                        {
+                            <h5>
+                                <strong>Custom</strong>
+                            </h5>
+                            <div class="side-scroll">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover table-super-condensed">
+                                        <tbody>
+                                        @foreach (var cd in cdKeys)
+                                        {
+                                            <tr>
+                                                <td class="text-nowrap">@cd</td>
+                                                <td>@Linkify(error.CustomData[cd])</td>
+                                            </tr>
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                RenderVariableTable("Query Parameters", "querystring", error.QueryString);
+                RenderVariableTable("Form", "form", error.Form);
+                RenderVariableTable("Cookies", "cookies", error.Cookies);
+                RenderVariableTable("Request Headers", "headers", error.RequestHeaders);
             }
         </div>
     }

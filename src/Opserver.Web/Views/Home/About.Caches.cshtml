@@ -5,21 +5,23 @@
     var pollingInfo = Poller.GetPollingStatus();
     var ts = Poller.GetThreadStats();
     var pollerNodes = pollingInfo.Nodes
-        .OrderByWorst(n => n.DataPollers.GetWorstStatus())
-        .ThenByDescending(n => n.IsPolling)
-        .ThenBy(n => n.GetType().Name)
-        .ThenBy(n => n.UniqueKey).ToList();
+                                 .OrderByWorst(n => n.DataPollers.GetWorstStatus())
+                                 .ThenByDescending(n => n.IsPolling)
+                                 .ThenBy(n => n.GetType().Name)
+                                 .ThenBy(n => n.UniqueKey).ToList();
     if (Model.Filter.HasValue())
     {
         pollerNodes = pollerNodes.Where(p => p.UniqueKey.IndexOf(Model.Filter, StringComparison.InvariantCultureIgnoreCase) != -1).ToList();
     }
 }
+
 @section head {
-@if (Model.AutoRefresh)
-{
-    <script>Status.Dashboard.init({ refresh: 10 });</script>
+    @if (Model.AutoRefresh)
+    {
+        <script>Status.Dashboard.init({ refresh: 10 });</script>
+    }
 }
-}
+
 <h5 class="page-header">
     Pollers
     <span class="text-muted small">(@pollingInfo.NodeCount.Pluralize("node"), @pollingInfo.TotalPollers.Pluralize("poller"), @pollingInfo.ActivePolls.ToComma() active)</span>
@@ -45,9 +47,9 @@
         </div>
     </div>
 </div>
-
-<table class="table table-hover table-responsive text-nowrap table-super-condensed">
-    <thead>
+<div class="table-responsive">
+    <table class="table table-hover text-nowrap table-super-condensed">
+        <thead>
         <tr>
             <th>Type</th>
             <th>Name</th>
@@ -57,17 +59,19 @@
             <th>Thread</th>
             <th>Action</th>
         </tr>
-    </thead>
-    @foreach (var pn in pollerNodes)
-    {
-        var pnType = pn.GetType();
-        var pollStatus = pn.PollStatus;
-        <tbody class="js-refresh" data-name="Node-@pn.NodeType-@pn.UniqueKey">
+        </thead>
+        @foreach (var pn in pollerNodes)
+        {
+            var pnType = pn.GetType();
+            var pollStatus = pn.PollStatus;
+            <tbody class="js-refresh" data-name="Node-@pn.NodeType-@pn.UniqueKey">
             <tr class="cache-item active @pn.RowClass()">
                 <th title="@pnType.FullName">@pn.IconSpan() @pnType.Name</th>
                 <th>@pn.UniqueKey</th>
                 <th>@pn</th>
-                <th>@(pn.LastPoll?.ToRelativeTimeSpanMini()) <span class="text-muted small">(@pn.LastPollDuration.ToTimeStringMini())</span></th>
+                <th>
+                    @(pn.LastPoll?.ToRelativeTimeSpanMini()) <span class="text-muted small">(@pn.LastPollDuration.ToTimeStringMini())</span>
+                </th>
                 <th></th>
                 <th>
                     @if (pn.IsPolling)
@@ -99,8 +103,14 @@ Url: /@pn.NodeType/@pn.UniqueKey.UrlEncode()/@p.ParentMemberName">
                         @(p.InventoryDescription ?? "(empty)")
                         <small>
                             @{
-                                if (!p.ContainsData) {<span class="text-danger"> (No Data)</span>}
-                                else if (p.IsStale){<span class="text-warning"> (Stale)</span>}
+                                if (!p.ContainsData)
+                                {
+                                    <span class="text-danger"> (No Data)</span>
+                                }
+                                else if (p.IsStale)
+                                {
+                                    <span class="text-warning"> (Stale)</span>
+                                }
                             }
                             (@p.PollsTotal.Pluralize("poll"): @p.PollsSuccessful.ToComma() successful)
                         </small>
@@ -131,6 +141,7 @@ Url: /@pn.NodeType/@pn.UniqueKey.UrlEncode()/@p.ParentMemberName">
                     </td>
                 </tr>
             }
-        </tbody>
-    }
-</table>
+            </tbody>
+        }
+    </table>
+</div>

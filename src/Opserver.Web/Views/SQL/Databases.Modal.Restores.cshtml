@@ -4,9 +4,11 @@
     var s = Model.Instance;
     var restoreList = s.GetRestoreInfo(Model.Database);
 }
+
 @section top {
     <span class="pull-right small">@Poll.Now(restoreList)</span>
 }
+
 @if (restoreList.Data == null || !restoreList.Successful)
 {
     <div class="alert alert-warning">
@@ -14,9 +16,11 @@
         <p class="error-stack">@restoreList.ErrorMessage</p>
     </div>
 }
-else {
-    <table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive js-database-restore-log">
-        <thead>
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover text-nowrap table-super-condensed js-database-restore-log">
+            <thead>
             <tr>
                 <th>Restore End</th>
                 <th>Type</th>
@@ -24,8 +28,8 @@ else {
                 <th>Backup Media</th>
                 <th>Backup End</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach (var b in restoreList.Data.OrderByDescending(b => b.RestoreFinishDate))
             {
                 <tr>
@@ -37,8 +41,8 @@ else {
                     <td title="@b.BackupFinishDate.ToEpochTime().ToString(CultureInfo.InvariantCulture)">@(b.BackupFinishDate.ToRelativeTimeSpanMini())</td>
                 </tr>
             }
-        </tbody>
-        <tfoot>
+            </tbody>
+            <tfoot>
             @if (!restoreList.Data.Any())
             {
                 <tr>
@@ -47,8 +51,9 @@ else {
                     </td>
                 </tr>
             }
-        </tfoot>
-    </table>
+            </tfoot>
+        </table>
+    </div>
     <script>
         $(function () {
             $('.js-database-restore-log').tablesorter({

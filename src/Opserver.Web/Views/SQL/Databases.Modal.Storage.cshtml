@@ -1,4 +1,5 @@
-﻿@model DatabasesModel
+﻿@using ExtensionMethods = Opserver.ExtensionMethods
+@model DatabasesModel
 @{
     Layout = "Databases.Modal.cshtml";
     var i = Model.Instance;
@@ -7,14 +8,16 @@
     var files = filesRaw?.Data?.Where(f => f.DatabaseId == db?.Id).OrderBy(f => f.FileType).ThenBy(f => f.PhysicalName);
     var tablesRaw = i?.GetTableInfo(Model.Database);
     var tables = tablesRaw.Data?.OrderByDescending(t => t.TotalSpaceKB).ThenBy(t => t.TableName).ToList();
-    var spaceIds = files != null ? Opserver.ExtensionMethods.ToHashSet(files.Select(f => f.DataSpaceId).Where(id => id > 0)) : new HashSet<int>();
+    var spaceIds = files != null ? ExtensionMethods.ToHashSet(files.Select(f => f.DataSpaceId).Where(id => id > 0)) : new HashSet<int>();
     var spacesRaw = i?.GetDataSpaceInfo(Model.Database);
     var spaces = spacesRaw.Data?.Where(ds => spaceIds.Contains(ds.Id)) ?? new List<SQLInstance.DatabaseDataSpace>();
     const int topTableShowCount = 10;
 }
+
 @section top {
     <span class="pull-right small">@Poll.Now(filesRaw, tablesRaw, spacesRaw)</span>
 }
+
 @if (db == null)
 {
     <div class="alert alert-warning">
@@ -35,54 +38,59 @@ else
     foreach (var ds in spaces.OrderBy(ds => ds.Id))
     {
         var isPrimary = ds.Name == "PRIMARY";
-    <div class="panel panel-@(isPrimary ? "primary" : "info") small">
-        <div class="panel-heading">Filegroup: @(isPrimary ? "Primary" : ds.Name)</div>
-        <div class="panel-body">
-            <table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Path</th>
-                        <th>Size</th>
-                        <th>Reads</th>
-                        <th>Writes</th>
-                        <th>Avg Read</th>
-                        <th>Avg Write</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var f in files.Where(f => f.DataSpaceId == ds.Id || (ds.Id == 1 && f.FileType == DatabaseFileTypes.Log)).OrderBy(f => f.FileType).ThenBy(f => f.PhysicalName))
-                    {
-                        var percentFull = f.UsedSizeBytes * 1.0 / f.TotalSizeBytes * 100;
+        <div class="panel panel-@(isPrimary ? "primary" : "info") small">
+            <div class="panel-heading">Filegroup: @(isPrimary ? "Primary" : ds.Name)</div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover text-nowrap table-super-condensed">
+                        <thead>
                         <tr>
-                            <td>@f.FileType.AsString(EnumFormat.Description)</td>
-                            <td title="Virtual Name: @f.FileName"><span title="@f.PhysicalName">@f.ShortPhysicalName</span></td>
-                            <td>
-                                @f.UsedSizeBytes.ToHumanReadableSize() / @f.TotalSizeBytes.ToHumanReadableSize() <span class="text-muted">(@percentFull.ToString("n2")%)</span>
-                                <div class="progress" style="width: 200px;">
-                                    <div class="progress-bar" style="width: @percentFull.ToString("n2", CultureInfo.InvariantCulture)%"></div>
-                                </div>
-                            </td>
-                            <td>@f.NumReads.ToComma()</td>
-                            <td>@f.NumWrites.ToComma()</td>
-                            <td title="Stalled: @f.StallReadMs.ToComma()">
-                                @f.AvgReadStallMs.ToString("F") <span class="text-muted">ms</span>
-                            </td>
-                            <td title="Stalled: @f.StallWriteMs.ToComma()">
-                                @f.AvgWriteStallMs.ToString("F") <span class="text-muted">ms</span>
-                            </td>
+                            <th>Type</th>
+                            <th>Path</th>
+                            <th>Size</th>
+                            <th>Reads</th>
+                            <th>Writes</th>
+                            <th>Avg Read</th>
+                            <th>Avg Write</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                        @foreach (var f in files.Where(f => f.DataSpaceId == ds.Id || ds.Id == 1 && f.FileType == DatabaseFileTypes.Log).OrderBy(f => f.FileType).ThenBy(f => f.PhysicalName))
+                        {
+                            var percentFull = f.UsedSizeBytes * 1.0 / f.TotalSizeBytes * 100;
+                            <tr>
+                                <td>@f.FileType.AsString(EnumFormat.Description)</td>
+                                <td title="Virtual Name: @f.FileName">
+                                    <span title="@f.PhysicalName">@f.ShortPhysicalName</span>
+                                </td>
+                                <td>
+                                    @f.UsedSizeBytes.ToHumanReadableSize() / @f.TotalSizeBytes.ToHumanReadableSize() <span class="text-muted">(@percentFull.ToString("n2")%)</span>
+                                    <div class="progress" style="width: 200px;">
+                                        <div class="progress-bar" style="width: @percentFull.ToString("n2", CultureInfo.InvariantCulture)%"></div>
+                                    </div>
+                                </td>
+                                <td>@f.NumReads.ToComma()</td>
+                                <td>@f.NumWrites.ToComma()</td>
+                                <td title="Stalled: @f.StallReadMs.ToComma()">
+                                    @f.AvgReadStallMs.ToString("F") <span class="text-muted">ms</span>
+                                </td>
+                                <td title="Stalled: @f.StallWriteMs.ToComma()">
+                                    @f.AvgWriteStallMs.ToString("F") <span class="text-muted">ms</span>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
     }
     <div class="panel panel-default small">
         <div class="panel-heading">Biggest Tables (Showing top @(Math.Min(tables.Count, topTableShowCount).ToComma()) of @tables.Count.ToComma())</div>
         <div class="panel-body">
-            <table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive">
-                <thead>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover text-nowrap table-super-condensed">
+                    <thead>
                     <tr>
                         <th>Table</th>
                         <th>Rows</th>
@@ -92,8 +100,8 @@ else
                         <th>Total Size</th>
                         <th>% of Total</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     @{
                         var totalSpace = db.TotalSizeMB - (db.LogSizeMB ?? 0);
                     }
@@ -121,8 +129,9 @@ else
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-                        }
+}

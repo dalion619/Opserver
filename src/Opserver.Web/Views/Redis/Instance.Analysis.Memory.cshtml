@@ -3,6 +3,7 @@
     Layout = "~/Views/Shared/Master.cshtml";
     var serverInfo = Module.GetInstance(Model.ConnectionInfo);
 }
+
 @functions
 {
     string TopKeys(KeyStats ks)
@@ -13,19 +14,21 @@
         }
         return null;
     }
+
     string Percent(long bytes)
     {
         if (bytes != 0)
         {
-            var percent = (bytes / (decimal)Model.TotalByteSize) * 100;
+            var percent = bytes / (decimal) Model.TotalByteSize * 100;
             <span class="text-muted">(@percent.ToString("0.00")%)</span>
         }
         return null;
     }
 }
+
 <h5 class="page-header">
     @Model.IconSpan() @serverInfo.HostAndPort (@Model.ConnectionInfo.Name) - Database @Model.Database.ToString()
-    <a class="pull-right" href="@Url.Action(nameof(RedisController.ClearAnalysis), new { node = serverInfo.HostAndPort, db = Model.Database })">Re-run analysis</a>
+    <a class="pull-right" href="@Url.Action(nameof(RedisController.ClearAnalysis), new {node = serverInfo.HostAndPort, db = Model.Database})">Re-run analysis</a>
 </h5>
 <div class="row small">
     <div class="value-block col-md-2 col-sm-4 col-xs-6">
@@ -56,8 +59,9 @@
 <h5 class="page-header">
     Memory Analysis
 </h5>
-<table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive">
-    <thead>
+<div class="table-responsive">
+    <table class="table table-striped table-hover text-nowrap table-super-condensed">
+        <thead>
         <tr>
             <th>Key Pattern</th>
             <th>Count</th>
@@ -65,8 +69,8 @@
             <th>Bytes (Value)</th>
             <th>Bytes (Total)</th>
         </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
         @if (Model.ErrorMessage.HasValue())
         {
             <tr>
@@ -95,24 +99,28 @@
                 </tr>
             }
         }
-    </tbody>
-    <tfoot>
+        </tbody>
+        <tfoot>
         <tr class="total-row">
-            <td><b>Total</b></td>
+            <td>
+                <b>Total</b>
+            </td>
             <td>@Model.Count.ToComma()</td>
             <td>@Model.KeyByteSize.ToHumanReadableSize()</td>
             <td>@Model.ValueByteSize.ToHumanReadableSize()</td>
             <td>@Model.TotalByteSize.ToHumanReadableSize()</td>
         </tr>
-    </tfoot>
-</table>
+        </tfoot>
+    </table>
+</div>
 @if (Model.TopKeys.Any())
 {
     <h5 class="page-header">
         Top Keys (by Size)
     </h5>
-    <table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive">
-        <thead>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover text-nowrap table-super-condensed">
+            <thead>
             <tr>
                 <th>Category</th>
                 <th>Key</th>
@@ -120,8 +128,8 @@
                 <th>Bytes (Value)</th>
                 <th>Bytes (Total)</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach (var tk in Model.TopKeys)
             {
                 <tr>
@@ -132,6 +140,7 @@
                     <td>@tk.TotalBytes.ToComma() @Percent(tk.TotalBytes)</td>
                 </tr>
             }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 }
