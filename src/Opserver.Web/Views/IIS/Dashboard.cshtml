@@ -1,0 +1,26 @@
+﻿@model DashboardModel
+@{
+    Layout = "~/Views/Shared/Master.cshtml";
+    this.SetPageTitle("IIS Dashboard");
+    this.SetTopNodes(Module.Instances, "IIS", Model.CurrentInstance, Url.Action(nameof(IISController
+        .Instance)));
+}
+
+@section head {
+    <script>
+        $(function() {
+            Status.Dashboard.init({ refresh: @(Model.Refresh.ToString()) });
+            Status.SQL.init({ node: @((Model.CurrentInstance?.Name ?? "").ToJson()) });
+        });
+    </script>
+}
+
+@functions
+{
+
+}
+
+<div>
+
+    @RenderBody()
+</div>
